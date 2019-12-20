@@ -14,6 +14,7 @@ from dockerenforcer.docker_helper import CheckSource, Container, DockerHelper
 from dockerenforcer.docker_image_helper import DockerImageHelper
 from .config import Mode, Config
 from triggers.triggers import triggers
+from urllib import parse
 
 logger = logging.getLogger("docker_enforcer")
 
@@ -134,6 +135,17 @@ class Judge:
 
     @staticmethod
     def _get_name_info(container: Container) -> Tuple[bool, str]:
+        if 'params' not in container:
+            if 'requesturi' in container:
+                current_path = container['requesturi'].split('/')
+                if current_path[2] == 'containers':
+                    container_name = current_path[3]
+                    if '?' in container_name:
+                        qs_parts = parse.parse_qs(container_name.split('?')[1])
+                        if len(qs_parts) > 0:
+                            container_name = qs_parts['name'][0]
+                    return True, container_name
+            return False, ''
         has_name = container.params and 'name' in container.params
         if has_name:
             name = container.params['name'][1:] if container.params['name'].startswith('/') \
@@ -143,12 +155,13 @@ class Judge:
         return has_name, name
 
     def _get_image_info(self, container: Container) -> str:
-        image: str = container.params['config']['image'] if 'image' in container.params['config'] \
-            else (container.params['image'] if 'image' in container.params else 'UNDEFINED')
-
-        if image.startswith("sha256:"):
-            image = self._docker_image_helper.get_image_uniq_tag_by_id(image)
-
+        if 'params' in container:
+            image: str = container.params['config']['image'] if 'image' in container.params['config'] \
+                else (container.params['image'] if 'image' in container.params else 'UNDEFINED')
+            if image.startswith("sha256:"):
+                image = self._docker_image_helper.get_image_uniq_tag_by_id(image)
+        else:
+            image = ''
         return image
 
     def _on_global_whitelist(self, container: Container) -> bool:
@@ -192,7 +205,9 @@ class Judge:
         return False
 
     def should_be_killed(self, subject: Subject) -> Verdict:
-        if not subject:
+        if isinstance(subject, Container):
+            return Verdict(False, subject, None)
+        if not subject or (subject['requesturi'] == '/_ping'):
             logger.warning("No {} details, skipping checks".format(self._subject_type))
             return Verdict(False, subject, None)
         if self._run_whitelists and self._on_global_whitelist(subject):

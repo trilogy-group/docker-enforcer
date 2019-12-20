@@ -23,6 +23,7 @@ from dockerenforcer.docker_image_helper import DockerImageHelper
 from dockerenforcer.killer import Killer, Judge, TriggerHandler
 from rules.rules import rules
 from request_rules.request_rules import request_rules
+from request_rules.start_request_rules import start_request_rules
 from whitelist_rules.whitelist_rules import whitelist_rules
 
 config = Config()
@@ -31,10 +32,18 @@ docker_helper = DockerHelper(config, client)
 docker_image_helper = DockerImageHelper(config, client)
 judge = Judge(rules, "container", config, run_whitelists=True, custom_whitelist_rules=whitelist_rules,
               docker_image_helper=docker_image_helper)
-requests_judge = Judge(request_rules, "request", config, run_whitelists=False)
+requests_judge = Judge(request_rules, "request", config, run_whitelists=True, custom_whitelist_rules=whitelist_rules)
+#requests_judge = Judge(request_rules, "request", config, run_whitelists=False)
 jurek = Killer(docker_helper, config.mode)
 trigger_handler = TriggerHandler()
 containers_regex = re.compile("^(/v.+?)?/containers/.+?$")
+
+start_requests_judge = Judge(start_request_rules, 'request', config, run_whitelists=True)
+
+#import sys
+#sys.path.append("pydevd-pycharm.egg")
+#import pydevd_pycharm
+#pydevd_pycharm.settrace('10.25.248.30', port=12345, stdoutToServer=True, stderrToServer=True)
 
 
 def create_app():
