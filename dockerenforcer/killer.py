@@ -142,7 +142,7 @@ class Judge:
                     container_name = current_path[3]
                     if '?' in container_name:
                         qs_parts = parse.parse_qs(container_name.split('?')[1])
-                        if len(qs_parts) > 0:
+                        if len(qs_parts) > 0 and 'name' in qs_parts:
                             container_name = qs_parts['name'][0]
                     return True, container_name
             return False, ''
