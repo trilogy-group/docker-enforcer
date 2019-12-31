@@ -138,6 +138,8 @@ class Judge:
         if 'params' not in container:
             if 'requesturi' in container:
                 current_path = container['requesturi'].split('/')
+                logger.info('** _get_name_info')
+                logger.info(current_path)
                 if current_path[2] == 'containers':
                     container_name = current_path[3]
                     if '?' in container_name:
@@ -165,6 +167,7 @@ class Judge:
         return image
 
     def _on_global_whitelist(self, container: Container) -> bool:
+        logger.info('** get from global whitelist')
         has_name, name = self._get_name_info(container)
         on_list = has_name and any(rn.match(name) for rn in self._global_whitelist)
         if on_list:
