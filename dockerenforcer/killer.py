@@ -172,14 +172,14 @@ class Judge:
             return True
 
         image_name = self._get_image_info(container)
-        on_list = any(rn.match(image_name) for rn in self._image_global_whitelist)        
+        on_list = any(rn.match(image_name) for rn in self._image_global_whitelist)
         if on_list:
             logger.debug("Container {0} is on global image white list (for all rules)".format(name))
             return True
         return False
 
     def _on_per_rule_whitelist(self, container: Container, rule_name: str) -> bool:
-        has_name, name = self._get_name_info(container)        
+        has_name, name = self._get_name_info(container)
         on_list = has_name and rule_name in self._per_rule_whitelist \
             and any(rn.match(name) for rn in self._per_rule_whitelist[rule_name])
         if on_list:
