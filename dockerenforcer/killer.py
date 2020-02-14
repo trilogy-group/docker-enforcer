@@ -138,13 +138,15 @@ class Judge:
         if 'params' not in container:
             if 'requesturi' in container:
                 current_path = container['requesturi'].split('/')
-                if current_path[2] == 'containers':
-                    container_name = current_path[3]
-                    if '?' in container_name:
-                        qs_parts = parse.parse_qs(container_name.split('?')[1])
-                        if len(qs_parts) > 0 and 'name' in qs_parts:
-                            container_name = qs_parts['name'][0]
-                    return True, container_name
+                logger.info(current_path)
+                if len(current_path) > 2:
+                    if current_path[2] == 'containers':
+                        container_name = current_path[3]
+                        if '?' in container_name:
+                            qs_parts = parse.parse_qs(container_name.split('?')[1])
+                            if len(qs_parts) > 0 and 'name' in qs_parts:
+                                container_name = qs_parts['name'][0]
+                        return True, container_name
             return False, ''
         has_name = container.params and 'name' in container.params
         if has_name:
